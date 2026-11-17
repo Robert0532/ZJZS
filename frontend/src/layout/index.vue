@@ -58,7 +58,8 @@
             <template #dropdown>
               <el-dropdown-menu>
                 <el-dropdown-item command="profile">当前账号：{{ userStore.user.username }}</el-dropdown-item>
-                <el-dropdown-item command="logout" divided>退出登录</el-dropdown-item>
+                <el-dropdown-item command="portal" divided>进入前台驾驶舱</el-dropdown-item>
+                <el-dropdown-item command="logout">退出登录</el-dropdown-item>
               </el-dropdown-menu>
             </template>
           </el-dropdown>
@@ -163,6 +164,10 @@ const activeMenu = computed(() => route.path)
 const currentTitle = computed(() => route.meta?.title || '首页')
 
 const onCommand = async (cmd) => {
+  if (cmd === 'portal') {
+    router.push('/portal')
+    return
+  }
   if (cmd === 'logout') {
     await ElMessageBox.confirm('确认退出登录？', '提示', { type: 'warning' })
     await userStore.logout()

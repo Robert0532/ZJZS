@@ -13,6 +13,19 @@ const loadView = (component) => {
 
 export const constantRoutes = [
   { path: '/login', component: () => import('@/views/login/index.vue'), meta: { public: true } },
+  // 前台驾驶舱：独立于后台 Layout，不带侧边栏
+  {
+    path: '/portal',
+    name: 'Portal',
+    component: () => import('@/views/portal/index.vue'),
+    meta: { title: '数据驾驶舱' }
+  },
+  {
+    path: '/portal/cockpit/:key',
+    name: 'PortalCockpit',
+    component: () => import('@/views/portal/cockpit.vue'),
+    meta: { title: '数据驾驶舱' }
+  },
   {
     path: '/',
     name: 'Layout',

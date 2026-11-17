@@ -1,9 +1,9 @@
 # 硕果大数据测试服 · 后台管理系统（Spring Boot + MySQL + Vue3）
 
-> 仓库：`ZJZS` · 版本：**V2.0 后台上线**
-> 线上地址：**http://111.228.23.195:3001/**
+> 仓库：`ZJZS` · 版本：**V2.1 前台数据驾驶舱**
+> 线上地址：**http://111.228.23.195:3001/**（前台：`/portal`）
 
-对标 JeePlus 后台管理能力的可运行系统：**用户 / 角色 / 菜单 / 部门 / 字典 / 操作日志** 六个系统模块 + **17 个部门数据模块** + **五种行级数据权限** + **菜单驱动的动态路由**。
+对标 JeePlus 后台管理能力的可运行系统：**用户 / 角色 / 菜单 / 部门 / 字典 / 操作日志** 六个系统模块 + **17 个部门数据模块** + **五种行级数据权限** + **菜单驱动的动态路由** + **前台驾驶舱大厅**。
 
 已连接真实 MySQL、完成接口联调，并**部署为单个 jar + 单端口（前端页面与 API 同源）对外提供服务**。
 
@@ -16,7 +16,8 @@
 | V1.2 | `db9460b` | 侧边栏支持拖拽调宽 |
 | V1.2.1 / V1.2.2 | `684e40e` / `6014f4a` | 首页精简 |
 | V1.3 | `ce6351d` | 单端口同源部署（API 挂 `/api`，根路径发前端页 + SPA 回退） |
-| **V2.0** | 本版 | **后台上线**：部署到服务器、上线手册入库 |
+| V2.0 | `4fb531f` | 后台上线：部署到服务器、上线手册入库 |
+| **V2.1** | 本版 | **前台数据驾驶舱**：领导舱通栏 + 15 部门 5×3 宫格，舱内按数据权限过滤 |
 
 ---
 
@@ -61,11 +62,13 @@ rbac-skeleton/
 │     ├─ directive/perm.js   v-perm 按钮级权限
 │     ├─ views/
 │     │  ├─ login / dashboard / error
+│     │  ├─ portal/           前台：驾驶舱大厅 + 舱内页 + 缩略图组件
 │     │  ├─ system/          用户 / 角色 / 菜单 / 部门 / 字典 / 日志
 │     │  └─ modules/         16 个部门模块（shared 壳 + finance…project 薄包装）
 │     └─ styles/index.css
 ├─ docs/
 │  ├─ 菜单与部门结构方案_V1.1.md   17 个一级菜单 / 16 部门的 ID 与权限规划
+│  ├─ 前台驾驶舱_V2.1.md          大厅布局、接口契约与权限口径
 │  └─ 上线部署手册_V2.0.md        线上服务器结构、运维命令、更新流程
 ├─ sql/
 │  ├─ init.sql              建表 + 种子数据（可重复执行，纯净基线）
@@ -211,6 +214,17 @@ npm run dev
 `@OperLog(title="用户管理", businessType="INSERT")`，AOP 记录：入参、返回、耗时、IP、操作人/部门、异常信息。
 日志写入包在 try-catch 里，**写日志失败不影响业务**；参数序列化会过滤掉 `MultipartFile` / Servlet 对象。
 
+### 5.6 前台驾驶舱的权限口径
+
+大厅对**所有登录账号返回完整的 16 张卡片**（领导舱 + 15 个部门），是否能看到舱内数据由 `data_scope` 决定：
+
+- `PortalService` 用 `DataScopeHelper.visibleDeptIds()` 算出当前账号可见部门集合（`null` 表示不限部门）
+- 卡片带 `accessible` 标记；不可见的卡片**照常展示、照常可点**，只是左上有「受限」角标
+- 点进受限的舱不会跳 403，而是返回 `accessible=false` + 原因 + 当前账号**有权限的舱**（`peers`），让用户不至于走进死胡同
+- 舱内数字只统计数据范围内的部门，`/api/portal/*` **不挂 `@RequiresPerm`**——权限过滤发生在 Service 层，而不是靠接口级拒绝
+
+这样部门账号（`finance` 等）登录前台仍能看到 5×3 的完整宫格，但只有自己那一格能出数据，其余 14 格是"看得见、进不去"。
+
 ---
 
 ## 6. 接口清单（前缀 `/api`）
@@ -261,6 +275,17 @@ npm run dev
 | finance 登录 | 仅「财务部数据管理」 |
 | finance 访问 `/api/system/user/page` | **403** |
 | 无 token 访问 | **401** |
+
+**前台驾驶舱（V2.1）**
+
+| 检查 | 结果 |
+|---|---|
+| `admin` → `/api/portal/overview` | 200，`scopeLabel=全部数据`，16 张卡片全部 `accessible=true` |
+| `finance` → 同一接口 | 200，`scopeLabel=本部门`，16 张卡片中 **1 张可用 / 15 张受限** |
+| `finance` → `/api/portal/cockpit/finance` | 200，`accessible=true`，`userCount=1`、`visibleDeptCount=1` |
+| `finance` → `/api/portal/cockpit/legal` | 200，`accessible=false`，提示「当前账号的数据范围为「本部门」，无权查看「商务法务部」的数据」 |
+| 公网 `/portal` 与 `/portal/cockpit/finance` | 200 HTML（SPA 回退生效） |
+| 无 token 调 `/api/portal/overview` | **401** |
 
 ---
 

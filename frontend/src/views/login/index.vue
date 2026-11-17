@@ -21,7 +21,7 @@
         </el-form-item>
         <div class="btns">
           <el-button type="primary" class="submit" :loading="loading" @click="submit">登录后台</el-button>
-          <el-button class="submit" @click="frontEntry">登录前台</el-button>
+          <el-button class="submit" :disabled="loading" @click="frontEntry">登录前台</el-button>
         </div>
       </el-form>
     </div>
@@ -60,9 +60,17 @@ const submit = async () => {
   }
 }
 
-// 前台入口：页面尚未建设，先占位
-const frontEntry = () => {
-  ElMessage.info('前台功能建设中，敬请期待')
+// 前台入口：同一个账号登录，登录后进入数据驾驶舱大厅
+const frontEntry = async () => {
+  await formRef.value.validate()
+  loading.value = true
+  try {
+    await userStore.login(form)
+    ElMessage.success('登录成功')
+    router.replace('/portal')
+  } finally {
+    loading.value = false
+  }
 }
 </script>
 
