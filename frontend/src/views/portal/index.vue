@@ -321,12 +321,13 @@ onMounted(async () => {
   color: #8b93a1;
 }
 
-@media (max-width: 1400px) {
+/* 1366 / 1440 / 1920 等常见桌面宽度都保持 5×3；再窄才逐级降列 */
+@media (max-width: 1200px) {
   .grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
-@media (max-width: 1080px) {
+@media (max-width: 980px) {
   .grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
