@@ -44,3 +44,71 @@ body {
   color: #8b93a1;
   font-size: 12.5px;
 }
+
+/* ---------- 部门数据管理页面 ---------- */
+.dept-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.dept-head h2 {
+  margin: 0 0 6px;
+  font-size: 19px;
+  font-weight: 500;
+}
+
+.dept-head p {
+  margin: 0;
+  color: #6b7383;
+  font-size: 13px;
+}
+
+.dept-tags {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.dept-alert {
+  margin-bottom: 16px;
+}
+
+.dept-kpi {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.dept-kpi-item {
+  background: #f7f9fc;
+  border: 1px solid #e8ebf0;
+  border-radius: 8px;
+  padding: 14px 16px;
+}
+
+.dept-kpi-item .k {
+  font-size: 12px;
+  color: #8b93a1;
+  margin-bottom: 6px;
+}
+
+.dept-kpi-item .v {
+  font-size: 20px;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.dept-card {
+  border: 1px solid #e8ebf0;
+}
+
+@media (max-width: 1100px) {
+  .dept-kpi {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+

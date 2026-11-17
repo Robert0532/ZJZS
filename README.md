@@ -47,11 +47,19 @@ rbac-skeleton/
 │     ├─ store/         pinia 用户态
 │     ├─ utils/request.js
 │     ├─ directive/perm.js   v-perm 按钮级权限
-│     └─ views/         login / dashboard / system(6 个系统模块) / error
-└─ sql/
-   ├─ init.sql           建表 + 种子数据（可重复执行，纯净基线）
-   ├─ database.sql       当前运行库的完整导出（结构 + 数据）
-   └─ init_db.py         执行 init.sql 并注入 BCrypt 密码哈希
+│     ├─ views/
+│     │  ├─ login / dashboard / error
+│     │  ├─ system/          用户 / 角色 / 菜单 / 部门 / 字典 / 日志
+│     │  └─ modules/         16 个部门模块（shared 壳 + finance…project 薄包装）
+│     └─ styles/index.css
+├─ docs/
+│  └─ 菜单与部门结构方案_V1.1.md   17 个一级菜单 / 16 部门的 ID 与权限规划
+├─ sql/
+│  ├─ init.sql              建表 + 种子数据（可重复执行，纯净基线）
+│  ├─ v1.1_departments.sql  V1.1 部门结构迁移（菜单 46 条 + 部门 16 + 角色 16）
+│  ├─ gen_v11.py            上面那个 SQL 的生成器（改部门/菜单时重跑）
+│  ├─ database.sql          当前运行库的完整导出（结构 + 数据）
+│  └─ init_db.py            依次执行 init.sql + v1.1，注入 BCrypt 密码哈希
 ```
 
 ---
@@ -64,8 +72,8 @@ rbac-skeleton/
 python sql/init_db.py
 ```
 
-脚本会：自动 `CREATE DATABASE IF NOT EXISTS rbac_demo`（utf8mb4）→ 读取 `init.sql` → 把 `{{PWD}}` 替换为 `BCrypt("123456")` → 逐条执行 → 回读表行数校验。
-重复执行安全（脚本内先 `DROP TABLE`）。
+脚本会：自动 `CREATE DATABASE IF NOT EXISTS rbac_demo`（utf8mb4）→ 执行 `init.sql` 建表 + 系统管理基线 → 再执行 `v1.1_departments.sql` 建 16 个部门、17 个一级菜单、部门管理员账号 → 把 `{{PWD}}` 替换为 `BCrypt("123456")` → 回读表行数校验（日志写到 `sql/_dbinit.log`）。
+重复执行安全（`init.sql` 内先 `DROP TABLE`，`v1.1` 内按 ID 区间先删后插）。需要 `pymysql` 与 `bcrypt`。
 
 也可以直接用仓库里的现成导出恢复（结构与数据同 `init.sql` 基线一致）：
 
@@ -124,13 +132,28 @@ npm run dev
 
 ---
 
-## 4. 初始账号
+## 4. 菜单结构与初始账号
 
-| 账号 | 密码 | 部门 | 角色 | 数据权限 |
-|---|---|---|---|---|
-| admin | `123456` | 总公司 | 超级管理员 | 全部数据 |
+### 4.1 菜单（17 个一级 / 53 个可见页面）
 
-初始化后库内**只保留超级管理员一个账号**，其余演示用户、演示角色、业务示例菜单与业务表均已清空。数据权限（五种口径）的代码能力保留，新建账号并配置 `sys_role.data_scope` 即可生效。
+| 序号 | 一级菜单 | 子菜单 |
+|---|---|---|
+| 0 | 领导数据驾驶舱 | 单页，无子菜单 |
+| 1–15 | 财务部 / 商务法务部 / 市场部 / 采购管理部 / 安全生产监督管理部 / 技术质量部 / 工程管理部 / 人力资源部 / 项目技术支撑中心 / 科创与产品部 / 党建工作部 / 办公室 / 设计院 / 经理部与事业部 / 项目部，各为「XX数据管理」 | 每个下面固定两个：**数据填报**、**数据驾驶舱** |
+| 16 | 系统管理 | 用户 / 角色 / 菜单 / 部门 / 字典 / 操作日志 |
+
+### 4.2 账号（密码统一 `123456`）
+
+| 账号 | 部门 | 角色 | 数据权限 |
+|---|---|---|---|
+| admin | 硕果大数据 | 超级管理员 | 全部数据 |
+| finance / legal / market / purchase / safety | 财务部 / 商务法务部 / 市场部 / 采购管理部 / 安全生产监督管理部 | 对应部门管理员 | 本部门 |
+| quality / engineering / hr / support / innovation | 技术质量部 / 工程管理部 / 人力资源部 / 项目技术支撑中心 / 科创与产品部 | 对应部门管理员 | 本部门 |
+| party / office / design / division / project | 党建工作部 / 办公室 / 设计院 / 经理部与事业部 / 项目部 | 对应部门管理员 | 本部门 |
+
+另有一个「公司领导（只读）」角色（`leader_readonly`，全公司只读），当前未绑定账号，需要时在用户管理里建。
+
+**部门管理员登录后侧边栏只有自己那一个模块**（1 个目录 + 2 个页面），访问 `/system/*` 一律 403；admin 可见全部 17 个一级菜单。
 
 > ⚠️ 拿到仓库后第一件事：用 admin 登录 → 用户管理 → 修改密码。`123456` 仅用于本地初始化。
 
@@ -198,14 +221,16 @@ npm run dev
 
 ---
 
-## 7. 已验证（当前基线）
+## 7. 已验证（当前基线 V1.1）
 
 - `mvn clean package` 通过，产出 `target/rbac-skeleton-1.0.0.jar`（31.5MB）
-- `vite build` 通过，1697 个模块，0 错误
-- 基线数据：1 用户 / 1 角色 / 29 菜单（含 22 个按钮）/ 1 部门 / 29 条角色-菜单 / 2 字典类型 / 0 日志
-- admin 登录 → 菜单树仅「系统管理」六个子模块；用户、角色、部门、字典、日志各模块接口均返回符合预期的数据
-- 业务示例已彻底下线：`/biz/demo/page` 返回 **HTTP 404**（不再是 200 + code 500）
-- 无 token 访问受保护接口返回 401；导出 CSV 带 UTF-8 BOM
+- `vite build` 通过，0 错误；新增 31 个部门页面全部编译进产物
+- 基线数据：**17 部门 / 17 角色 / 16 账号 / 75 菜单（17 一级 + 30 部门二级 + 6 系统管理二级 + 22 按钮）/ 121 条授权 / 0 日志**
+- 菜单表里 37 个 `component` 路径全部能落到实际 `.vue` 文件（脚本校验，0 缺失）
+- admin 登录 → 17 个一级菜单，53 个可见页面；菜单树展开顺序与序号 0–16 一致
+- `finance` / `quality` / `project` / `office` / `division` 登录 → 侧边栏仅本部门 1 个目录 + 2 个页面，perms 只含本部门两个标识，访问 `/system/user/page` 返回 **403**
+- 无 token 访问受保护接口返回 **401**；导出 CSV 带 UTF-8 BOM
+- `sql/init_db.py` 全量重建后可复现上述全部数字（163 条语句，一次执行通过）
 
 ---
 

@@ -34,3 +34,7 @@ desktop.ini
 *.tmp
 _dump.err
 _tmp/
+_*.log
+_*.json
+_*.txt
+_*.sql
