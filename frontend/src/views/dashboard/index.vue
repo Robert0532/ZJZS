@@ -1,7 +1,7 @@
 <template>
   <div class="page-card">
     <h2 class="title">欢迎，{{ userStore.user.nickname }}</h2>
-    <p class="sub">硕果大数据测试服，已接真实 MySQL，系统管理模块开箱可用。</p>
+    <p class="sub">硕果大数据测试服，系统管理模块开箱可用。</p>
 
     <el-row :gutter="14" class="cards">
       <el-col :span="6">
