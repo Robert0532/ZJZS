@@ -19,7 +19,10 @@
             :prefix-icon="Lock"
           />
         </el-form-item>
-        <el-button type="primary" class="submit" :loading="loading" @click="submit">登 录</el-button>
+        <div class="btns">
+          <el-button type="primary" class="submit" :loading="loading" @click="submit">登录后台</el-button>
+          <el-button class="submit" @click="frontEntry">登录前台</el-button>
+        </div>
       </el-form>
     </div>
   </div>
@@ -56,6 +59,11 @@ const submit = async () => {
     loading.value = false
   }
 }
+
+// 前台入口：页面尚未建设，先占位
+const frontEntry = () => {
+  ElMessage.info('前台功能建设中，敬请期待')
+}
 </script>
 
 <style scoped>
@@ -83,8 +91,17 @@ const submit = async () => {
   font-size: 12.5px;
   color: #8b93a1;
 }
+.btns {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 4px;
+}
+.btns :deep(.el-button + .el-button) {
+  margin-left: 0;
+}
 .submit {
   width: 100%;
-  margin-top: 4px;
+  margin: 0;
 }
 </style>
