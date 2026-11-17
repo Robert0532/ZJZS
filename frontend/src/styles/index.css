@@ -112,3 +112,14 @@ body {
   }
 }
 
+/* ---------- 侧边栏拖拽时的全局接管 ---------- */
+body.aside-resizing {
+  cursor: col-resize;
+  user-select: none;
+}
+
+body.aside-resizing * {
+  cursor: col-resize !important;
+  user-select: none !important;
+}
+
