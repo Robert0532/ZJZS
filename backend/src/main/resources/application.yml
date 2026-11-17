@@ -1,11 +1,13 @@
 server:
   port: 8088
-  servlet:
-    context-path: /api
 
 spring:
   application:
     name: rbac-skeleton
+  web:
+    resources:
+      # 生产环境由后端同时托管前端：/ZJZS/static 放 vite build 产物
+      static-locations: file:/ZJZS/static/,classpath:/static/
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://127.0.0.1:3306/rbac_demo?useUnicode=true&characterEncoding=utf8&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai&zeroDateTimeBehavior=convertToNull&rewriteBatchedStatements=true
